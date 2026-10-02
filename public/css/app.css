@@ -241,7 +241,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 }
 .divider::before { content: ''; position: absolute; inset: 0 -6px; }
 .divider__grip {
-  position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%);
+  position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%);
   width: 11px; height: 24px; border-radius: 3px;
   display: flex;
   justify-content: center;

@@ -1,7 +1,8 @@
 /* =====================================================================
    Bluebook replica — application logic
    Flow: Start Code → RW M1 → RW M2 → 10-min break → Math M1 → Math M2 → Done
-   All progress is persisted to localStorage so a refresh never loses the test.
+   Nothing is stored in the browser: leaving or reloading the page starts
+   over from the start-code screen.
    ===================================================================== */
 (() => {
   'use strict';
@@ -11,30 +12,6 @@
   const LETTERS = ['A', 'B', 'C', 'D'];
   // Personal test page: /2222 → student 2222 (registered on the operator page).
   const STUDENT_ID = (location.pathname.match(/^\/(\d{3,8})\/?$/) || [])[1] || null;
-
-  // Remember the last personal page opened on this device, so the bare site address
-  // (or an app installed from it) goes straight back to it.
-  // "/?forget" clears it. The server's invalid-link page clears it too.
-  const LS_REMEMBERED = 'bb.student';
-  const bootParams = new URLSearchParams(location.search);
-  try {
-    if (STUDENT_ID) {
-      localStorage.setItem(LS_REMEMBERED, STUDENT_ID);
-    } else if (bootParams.has('forget')) {
-      localStorage.removeItem(LS_REMEMBERED);
-      history.replaceState(null, '', '/');
-    } else {
-      const remembered = localStorage.getItem(LS_REMEMBERED);
-      if (remembered && /^\d{3,8}$/.test(remembered)) {
-        location.replace(`/${remembered}${location.search}`);
-        return;
-      }
-    }
-  } catch { /* storage blocked: behave like a normal page */ }
-  // Progress is stored per student so a shared computer never mixes two students' tests.
-  const LS_SUFFIX = STUDENT_ID ? `.${STUDENT_ID}` : '';
-  const LS_STATE = 'bb.state.v1' + LS_SUFFIX;
-  const LS_QUESTIONS = 'bb.questions.v1' + LS_SUFFIX;
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -66,22 +43,13 @@
     submitted: false,
   });
 
-  const store = {
-    get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
-    set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* storage full / blocked */ } },
-    clear() { try { localStorage.removeItem(LS_STATE); localStorage.removeItem(LS_QUESTIONS); } catch { /* ignore */ } },
-  };
+  // Drop progress saved by earlier versions of the app.
+  try { Object.keys(localStorage).filter((k) => k.startsWith('bb.')).forEach((k) => localStorage.removeItem(k)); } catch { /* blocked */ }
 
   const params = new URLSearchParams(location.search);
-  if (params.has('reset')) {
-    store.clear();
-    params.delete('reset');
-    history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : ''));
-  }
 
-  let S = Object.assign(freshState(), store.get(LS_STATE) || {});
-  let Q = store.get(LS_QUESTIONS);
-  if (S.phase !== 'code' && !Q) S = freshState();
+  let S = freshState();
+  let Q = null;
   if (!STUDENT_ID && params.get('name')) S.name = params.get('name').slice(0, 80);
   if (!S.name && !STUDENT_ID) S.name = CFG.studentName || '';
 
@@ -92,13 +60,11 @@
       .then((data) => {
         if (!data || !data.name) return;
         S.name = data.name;
-        save();
         setName();
       })
       .catch(() => { /* offline: keep the cached name */ });
   }
 
-  const save = () => store.set(LS_STATE, S);
   const bucket = (obj, mi) => (obj[mi] ||= {});
 
   const mod = () => MODS[S.mi];
@@ -286,7 +252,6 @@
     S.view = 'question';
     S.phase = 'exam';
     S.endAt = Date.now() + mod().minutes * 60 * 1000;
-    save();
     route();
     if (mod().module === 1) openDirections();
   }
@@ -302,7 +267,6 @@
       S.phase = 'transition';
       S.transitionUntil = Date.now() + CFG.transitionSeconds * 1000;
     }
-    save();
     route();
   }
 
@@ -319,14 +283,13 @@
       if (warn && !S.warned[S.mi]) {
         S.warned[S.mi] = true;
         if (S.timerHidden) setTimerHidden(false);
-        save();
         if (left > 0) toast(`${Math.ceil(left / 60)} minutes remaining in this module.`);
       }
       if (left <= 0) endModule();
     } else if (S.phase === 'break') {
       const left = secondsLeft(S.breakEndAt);
       $('#break-time').textContent = fmt(left);
-      if (left <= 0) { S.phase = 'resume'; save(); route(); }
+      if (left <= 0) { S.phase = 'resume'; route(); }
     }
   }
   setInterval(onTick, 250);
@@ -354,7 +317,6 @@
     S.timerHidden = hidden;
     $('#timer').classList.toggle('is-hidden', hidden);
     $('#timer-hide').textContent = hidden ? 'Show' : 'Hide';
-    save();
   }
 
   /* ------------------------------------------------------------------ */
@@ -437,7 +399,6 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Unable to verify start code. Please try again.');
       Q = data.questions;
-      store.set(LS_QUESTIONS, Q);
       const name = data.name || S.name;
       S = freshState();
       S.name = name;
@@ -657,14 +618,13 @@
     closeNote();
     S.view = 'question';
     S.qi = Math.max(0, Math.min(list().length - 1, qi));
-    save();
     renderExam();
   }
 
   function next() {
     if (S.view === 'review') return;   // modules only end when the clock runs out
     if (S.qi < list().length - 1) goTo(S.qi + 1);
-    else { closeNavpop(); S.view = 'review'; save(); renderExam(); }
+    else { closeNavpop(); S.view = 'review'; renderExam(); }
   }
 
   function back() {
@@ -677,7 +637,6 @@
     const crossed = bucket(S.crossed, S.mi);
     if ((crossed[S.qi] || []).includes(L)) crossed[S.qi] = crossed[S.qi].filter((x) => x !== L);
     ans[S.qi] = L;
-    save();
     renderQuestion();
   }
 
@@ -692,14 +651,12 @@
       cur.delete(L);
     }
     crossed[S.qi] = [...cur];
-    save();
     renderQuestion();
   }
 
   function toggleMark() {
     const m = bucket(S.marked, S.mi);
     if (m[S.qi]) delete m[S.qi]; else m[S.qi] = true;
-    save();
     renderQuestion();
   }
 
@@ -718,7 +675,7 @@
       case 'cross': cross(L, true); break;
       case 'uncross': cross(L, false); break;
       case 'mark': toggleMark(); break;
-      case 'elim': S.elim = !S.elim; save(); renderQuestion(); break;
+      case 'elim': S.elim = !S.elim; renderQuestion(); break;
     }
   });
 
@@ -736,7 +693,6 @@
     if (inp.value !== v) inp.value = v;
     const ans = bucket(S.answers, S.mi);
     if (v) ans[S.qi] = v; else delete ans[S.qi];
-    save();
     updateSprPreview();
   });
 
@@ -793,7 +749,6 @@
   function saveHighlight(container) {
     const byQ = bucket(S.hl, S.mi);
     (byQ[S.qi] ||= {})[container.dataset.hlKey] = container.innerHTML;
-    save();
   }
 
   function openNote(markEl) {
@@ -932,7 +887,6 @@
   $('#navpop-review').addEventListener('click', () => {
     closeNavpop();
     S.view = 'review';
-    save();
     renderExam();
   });
 
@@ -1096,7 +1050,7 @@
       if (S.calcState) { try { calculator.setState(S.calcState); } catch { /* stale state */ } }
       calculator.observeEvent('change', () => {
         clearTimeout(calcSaveTimer);
-        calcSaveTimer = setTimeout(() => { S.calcState = calculator.getState(); save(); }, 600);
+        calcSaveTimer = setTimeout(() => { S.calcState = calculator.getState(); }, 600);
       });
     } catch {
       host.innerHTML = '<p class="calc__loading">The calculator could not load. Check your internet connection and try again.</p>';
@@ -1218,7 +1172,6 @@
       });
       if (!res.ok) throw new Error('submit failed');
       S.submitted = true;
-      save();
     } catch {
       $('#done-status').textContent = 'Saving your results… please keep this screen open.';
       retryTimer = setTimeout(submitResults, 10000);
@@ -1234,7 +1187,6 @@
       submitResults();
       return;
     }
-    store.clear();
     location.reload();
   });
 

@@ -6,7 +6,7 @@
  *  - GET  /<id>                 personal test page (e.g. /2222) for a student registered by the operator
  *  - GET  /api/student/<id>     { id, name }
  *  - POST /api/start            { code, studentId }  -> Telegram: name + start code; returns token + questions (answers stripped)
- *  - POST /api/finish           { token, studentId, answers } -> graded on the server, stored in db.json; Telegram: name + code
+ *  - POST /api/finish          { token, studentId, answers } -> graded on the server, stored in db.json; Telegram: name + code
  *
  *  Operator side (login required)
  *  - GET  /operator             operator panel
@@ -52,8 +52,10 @@ if (db.data.operators.length === 0) {
 }
 
 const PORT = Number(process.env.PORT) || 3000;
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8873915390:AAGKrNcWCS-ewS4TLThMFCVddPIsE38OLZ4';
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '-1004368993240';
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+/** Teachers' Telegram user ids (comma-separated). Each one must have pressed Start in the bot once. */
+const CHAT_IDS = String(process.env.TELEGRAM_CHAT_IDS || process.env.TELEGRAM_CHAT_ID || '')
+  .split(',').map((s) => s.trim()).filter(Boolean);
 const SKIP_TELEGRAM = process.env.SKIP_TELEGRAM === '0';
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const QUESTIONS_FILE = path.join(__dirname, 'data', 'questions.js');
@@ -132,15 +134,22 @@ async function sendTelegram(text) {
     console.log('[telegram skipped]\n' + text);
     return;
   }
-  if (!BOT_TOKEN || !CHAT_ID) throw new Error('Telegram is not configured (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID).');
-  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'HTML', disable_web_page_preview: true }),
-    signal: AbortSignal.timeout(15000),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data.ok) throw new Error(`Telegram error: ${data.description || res.status}`);
+  if (!BOT_TOKEN || !CHAT_IDS.length) throw new Error('Telegram is not configured (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_IDS).');
+  const sendTo = async (chatId) => {
+    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(`Telegram error for ${chatId}: ${data.description || res.status}`);
+  };
+  // Every teacher gets the message; it counts as delivered if at least one of them received it.
+  const results = await Promise.allSettled(CHAT_IDS.map(sendTo));
+  const failed = results.filter((r) => r.status === 'rejected');
+  failed.forEach((r) => console.error(r.reason.message));
+  if (failed.length === results.length) throw new Error('Telegram: the message reached no teacher.');
 }
 
 function stamp() {
@@ -444,8 +453,7 @@ function notFoundPage(res) {
   res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
   res.end(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bluebook</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#000;color:#fff;font:500 16px Roboto,Arial,sans-serif;text-align:center}h1{font-size:26px;margin:0 0 10px}</style></head>
-<body><div><h1>This test link is not valid</h1><p>Ask your proctor for your personal test link.</p></div>
-<script>try{var m=location.pathname.match(/^\\/(\\d{3,8})\\/?$/);if(m&&localStorage.getItem('bb.student')===m[1])localStorage.removeItem('bb.student')}catch(e){}</script></body></html>`);
+<body><div><h1>This test link is not valid</h1><p>Ask your proctor for your personal test link.</p></div></body></html>`);
 }
 
 http.createServer((req, res) => {
@@ -473,7 +481,8 @@ http.createServer((req, res) => {
 }).listen(PORT, () => {
   console.log(`SAT runner on http://localhost:${PORT}   ·   operator panel: http://localhost:${PORT}/operator`);
   if (SKIP_TELEGRAM) console.log('SKIP_TELEGRAM=1 — messages are printed here instead of sent.');
-  else if (!BOT_TOKEN || !CHAT_ID) console.warn('WARNING: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID are not set in .env');
+  else if (!BOT_TOKEN || !CHAT_IDS.length) console.warn('WARNING: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_IDS are not set in .env');
+  else console.log(`Telegram: messages go to ${CHAT_IDS.length} teacher(s).`);
 });
 
 // Drop expired operator sessions and finished test tokens once an hour.

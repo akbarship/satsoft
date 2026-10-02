@@ -6,7 +6,7 @@
  *
  * Bump VERSION whenever you change files in /public so clients pick up the update.
  */
-const VERSION = 'v38';
+const VERSION = 'v39';
 const SHELL_CACHE = `bb-shell-${VERSION}`;
 const RUNTIME_CACHE = `bb-runtime-${VERSION}`;
 

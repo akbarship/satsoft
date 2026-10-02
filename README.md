@@ -5,23 +5,23 @@ A pixel-matched replica of the College Board Bluebook testing app.
 **Flow:** Start Code → Reading & Writing M1 (27 q / 32 min) → R&W M2 (27 q / 32 min) → 10-min mandatory break → Resume Testing → Math M1 (22 q / 35 min) → Math M2 (22 q / 35 min) → Congratulations screen.
 
 - **Personal pages:** each student gets a link like `satsoft.com/2222`, created on the operator panel. That page shows the student's name on the test.
-- **Telegram** receives only the **student name and start code**, once when the test starts and once when it finishes. No answers are sent. The test won't open if the start message can't be delivered.
+- **The teachers** get a private Telegram message with only the **student name and start code**, once when the test starts and once when it finishes. No answers are sent. The test won’t open if the start message reaches no teacher.
 - **Scores** (Reading & Writing, Math, total) are saved in `data/db.json` and shown on the operator panel.
 - The answer key, the bot token and operator passwords stay on the server.
-- Progress is saved per student in the browser, so a refresh or crash resumes at the same question with the same clock.
+- Nothing is stored in the browser. Leaving or reloading the page starts over from the start-code screen (the page warns before leaving mid-test).
 
 ## Run
 
 Requires Node.js 18+. There are no npm dependencies.
 
 ```bash
-cp .env.example .env      # then fill in TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID
+cp .env.example .env      # then fill in TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_IDS
 npm start                 # http://localhost:3000
 ```
 
 For local testing without posting to Telegram, run `npm run dev`. Messages are printed to the console instead.
 
-**Telegram setup:** create a bot with @BotFather, add it to your channel as an **administrator**, and put the channel's `@username` or numeric id (`-100…`) in `TELEGRAM_CHAT_ID`.
+**Telegram setup:** create a bot with @BotFather and put the teachers' numeric Telegram user ids in `TELEGRAM_CHAT_IDS`, separated by commas. Each teacher must open the bot and press **Start** once, or the bot cannot message them. Every message goes to all teachers; a test opens if at least one of them receives it.
 
 ## Operator panel
 
@@ -43,7 +43,7 @@ The app is an installable Progressive Web App.
 - **Android:** Chrome menu → *Install app*.
 - **iPad / iPhone:** Safari → Share → *Add to Home Screen*.
 
-**Offline:** after the first visit, the app, fonts, KaTeX and the Desmos calculator are cached. If the network drops mid-test, the test keeps running and survives reloads. Only two steps need the server: entering the start code (it must reach Telegram) and sending results. The finish screen retries results automatically until they go through.
+**Offline:** after the first visit, the app, fonts, KaTeX and the Desmos calculator are cached. If the network drops mid-test, the test keeps running (but do not reload the page). Only two steps need the server: entering the start code (it must reach Telegram) and sending results. The finish screen retries results automatically until they go through.
 
 **HTTPS required:** browsers only allow installing from `https://` or `http://localhost`. On a school network, serve it over HTTPS, for example behind Caddy/nginx or with a tunnel such as Cloudflare Tunnel. Otherwise each student laptop has to run it on localhost.
 
@@ -54,9 +54,7 @@ The app is an installable Progressive Web App.
 | Action | How |
 |---|---|
 | Give a student their test | create their page on `/operator` and open `host/2222` on their laptop |
-| Let a student retake the test | open `host/2222?reset` on that laptop |
-| Remembered page | after `host/2222` is opened once, the bare `host/` (and an app installed from it) always opens `/2222` on that device |
-| Make a laptop forget its student | open `host/?forget` (deleted students are forgotten automatically) |
+| Let a student retake the test | reload `host/2222` and enter a start code again |
 | Change timings / break length | `public/js/config.js` |
 | Desmos production key | `desmosApiKey` in `public/js/config.js` (the bundled key is the Desmos demo key) |
 
