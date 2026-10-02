@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bluebook</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Bluebook">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="application-name" content="Bluebook">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,500;0,700;0,900;1,400&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script defer src="/js/config.js"></script>
+  <script defer src="/js/icons.js"></script>
+  <script defer src="/js/app.js"></script>
+  <script defer src="/js/pwa.js"></script>
+</head>
+<body>
+
+<!-- ============================ START CODE ============================ -->
+<section id="screen-code" class="screen" hidden>
+  <header class="code-top">
+    <button class="code-top__link" type="button" data-open="help-modal">
+      <span class="ico" data-icon="help"></span>Help
+    </button>
+    <div class="code-top__right">
+      <button class="code-top__link" id="install-app" type="button" hidden>
+        <span class="ico" data-icon="install"></span>Install App
+      </button>
+      <button class="code-top__link" type="button" data-open="home-modal">
+        Return to Home<span class="ico" data-icon="home"></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="code-main">
+    <h1 class="code-title">Start Code</h1>
+    <p class="code-text">Enter your start code now to begin testing. Good luck!</p>
+    <p class="code-text">The start code contains <b>numbers only</b>.</p>
+
+    <form id="code-form" class="code-form" autocomplete="off" novalidate>
+      <div class="code-boxes" id="code-boxes" role="group" aria-label="Start code">
+        <input class="code-box" inputmode="numeric" aria-label="Digit 1">
+        <input class="code-box" inputmode="numeric" aria-label="Digit 2">
+        <input class="code-box" inputmode="numeric" aria-label="Digit 3">
+        <input class="code-box" inputmode="numeric" aria-label="Digit 4">
+        <input class="code-box" inputmode="numeric" aria-label="Digit 5">
+        <input class="code-box" inputmode="numeric" aria-label="Digit 6">
+      </div>
+      <p class="code-error" id="code-error" role="alert"></p>
+      <button class="code-start" id="code-start" type="submit">Start Test</button>
+    </form>
+
+    <aside class="code-card">
+      <span class="ico code-card__ico" data-icon="clipboard"></span>
+      <p>You can <a href="#" data-open="instructions-modal">review the instructions</a><br>that the proctor reads aloud.</p>
+    </aside>
+  </main>
+</section>
+
+<!-- ============================== EXAM =============================== -->
+<section id="screen-exam" class="screen exam" hidden>
+  <header class="hdr dashed-bottom">
+    <div class="hdr__left">
+      <h1 class="hdr__title" id="hdr-title"></h1>
+      <button class="hdr__dir" id="dir-toggle" type="button" aria-expanded="false">
+        Directions <span class="ico ico--chev" data-icon="chevronDown"></span>
+      </button>
+    </div>
+
+    <div class="hdr__center">
+      <div class="timer" id="timer">
+        <span class="timer__text" id="timer-text">0:00</span>
+        <span class="ico timer__clock" data-icon="clock"></span>
+      </div>
+      <button class="timer__hide" id="timer-hide" type="button">Hide</button>
+    </div>
+
+    <div class="hdr__right">
+      <div class="battery" id="battery" hidden><span id="battery-pct"></span><span class="ico" data-icon="battery"></span></div>
+      <div class="tools">
+        <button class="tool" id="tool-annotate" type="button" data-section="english">
+          <span class="tool__icons"><span class="ico" data-icon="annotate"></span><span class="ico" data-icon="notes"></span></span><span>Highlights &amp; Notes</span>
+        </button>
+        <button class="tool" id="tool-calc" type="button" data-section="math">
+          <span class="ico" data-icon="calculator"></span><span>Calculator</span>
+        </button>
+        <button class="tool" id="tool-ref" type="button" data-section="math">
+          <span class="ico ico--ref" data-icon="reference"></span><span>Reference</span>
+        </button>
+        <div class="tool-wrap">
+          <button class="tool" id="tool-more" type="button" aria-haspopup="true" aria-expanded="false">
+            <span class="ico" data-icon="more"></span><span>More</span>
+          </button>
+          <div class="menu" id="more-menu" hidden>
+            <button type="button" data-action="help">Help</button>
+            <button type="button" data-action="shortcuts">Keyboard Shortcuts</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="body" id="exam-body"></main>
+
+  <footer class="ftr dashed-top">
+    <div class="ftr__name" id="student-name"></div>
+    <div class="ftr__center">
+      <button class="navpill" id="navpill" type="button" aria-expanded="false">
+        <span id="navpill-text">Question 1 of 27</span>
+        <span class="ico ico--chev" data-icon="chevronUp"></span>
+      </button>
+    </div>
+    <div class="ftr__right">
+      <button class="btn-blue" id="btn-back" type="button">Back</button>
+      <button class="btn-blue" id="btn-next" type="button">Next</button>
+    </div>
+  </footer>
+
+  <!-- Directions drop-down -->
+  <div class="scrim" id="dir-scrim" hidden></div>
+  <div class="dirpanel" id="dir-panel" hidden role="dialog" aria-label="Directions">
+    <div class="dirpanel__body" id="dir-body"></div>
+    <div class="dirpanel__foot"><button class="btn-yellow" id="dir-close" type="button">Close</button></div>
+  </div>
+
+  <!-- Question navigator pop-up -->
+  <div class="navpop" id="navpop" hidden role="dialog">
+    <div class="navpop__head">
+      <h2 id="navpop-title"></h2>
+      <button class="icon-btn" id="navpop-close" type="button" aria-label="Close"><span class="ico" data-icon="close"></span></button>
+    </div>
+    <div class="legend">
+      <span><span class="ico legend__pin" data-icon="pin"></span>Current</span>
+      <span><span class="legend__box"></span>Unanswered</span>
+      <span><span class="ico legend__flag" data-icon="bookmarkFill"></span>For Review</span>
+    </div>
+    <div class="qgrid" id="navpop-grid"></div>
+    <div class="navpop__foot"><button class="btn-outline" id="navpop-review" type="button">Go to Review Page</button></div>
+  </div>
+
+  <!-- Desmos calculator -->
+  <div class="floatwin calc" id="calc-win" hidden>
+    <div class="floatwin__bar" data-drag>
+      <span class="floatwin__title">Calculator</span>
+      <span class="floatwin__grip" aria-hidden="true"></span>
+      <div class="floatwin__actions">
+        <button class="floatwin__btn" id="calc-expand" type="button" aria-label="Expand"><span class="ico" data-icon="expand"></span></button>
+        <button class="floatwin__btn" data-close="calc-win" type="button" aria-label="Close"><span class="ico" data-icon="close"></span></button>
+      </div>
+    </div>
+    <div class="calc__host" id="calc-host"><p class="calc__loading">Loading calculator…</p></div>
+    <span class="floatwin__resize" data-resize aria-hidden="true"></span>
+  </div>
+
+  <!-- Reference sheet -->
+  <div class="floatwin refwin" id="ref-win" hidden>
+    <div class="floatwin__bar" data-drag>
+      <span class="floatwin__title">Reference Sheet</span>
+      <span class="floatwin__grip" aria-hidden="true"></span>
+      <div class="floatwin__actions">
+        <button class="floatwin__btn" id="ref-collapse" type="button" aria-label="Collapse"><span class="ico" data-icon="minimize"></span></button>
+        <button class="floatwin__btn" data-close="ref-win" type="button" aria-label="Close"><span class="ico" data-icon="close"></span></button>
+      </div>
+    </div>
+    <div class="refwin__body" id="ref-body"></div>
+    <span class="floatwin__resize" data-resize aria-hidden="true"></span>
+  </div>
+
+  <!-- Highlights & Notes editor -->
+  <div class="notepanel" id="note-panel" hidden role="dialog" aria-label="Highlights and notes">
+    <div class="notepanel__bar">
+      <span class="notepanel__label">Selected:</span>
+      <span class="notepanel__quote" id="note-quote"></span>
+      <button class="floatwin__btn" id="note-close" type="button" aria-label="Close"><span class="ico" data-icon="close"></span></button>
+    </div>
+    <div class="notepanel__body">
+      <textarea id="note-text" maxlength="2000" placeholder="Type your note here…" aria-label="Note"></textarea>
+      <div class="notepanel__actions">
+        <button class="btn-blue btn-blue--sm" id="note-save" type="button">Save</button>
+        <button class="btn-outline btn-outline--danger" id="note-delete" type="button">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+</section>
+
+<!-- =========================== TRANSITION ============================ -->
+<section id="screen-transition" class="screen transition" hidden>
+  <div class="transition__inner">
+    <h1>This Module Is Over</h1>
+    <p>All your work has been saved.</p>
+    <p>You’ll move on automatically in just a moment.</p>
+    <p>Do not refresh this page or quit the app.</p>
+    <svg class="spinner" viewBox="0 0 72 72" width="72" height="72" role="img" aria-label="Loading"><circle cx="36.00" cy="6.00" r="4.2" style="--i:0"/><circle cx="57.21" cy="14.79" r="4.2" style="--i:1"/><circle cx="66.00" cy="36.00" r="4.2" style="--i:2"/><circle cx="57.21" cy="57.21" r="4.2" style="--i:3"/><circle cx="36.00" cy="66.00" r="4.2" style="--i:4"/><circle cx="14.79" cy="57.21" r="4.2" style="--i:5"/><circle cx="6.00" cy="36.00" r="4.2" style="--i:6"/><circle cx="14.79" cy="14.79" r="4.2" style="--i:7"/></svg>
+  </div>
+</section>
+
+<!-- ============================== BREAK ============================== -->
+<section id="screen-break" class="screen dark brk" hidden>
+  <div class="brk__left">
+    <div class="brk__clock">
+      <div class="brk__label">Remaining Break Time:</div>
+      <div class="brk__time" id="break-time">10:00</div>
+    </div>
+  </div>
+  <div class="brk__right">
+    <h2>Take a Break: Do Not Close Your Device</h2>
+    <p>After the break, a <b>Resume Testing Now</b> button will appear and you’ll start the next section.</p>
+    <p class="brk__rules-title"><b>Follow these rules during the break:</b></p>
+    <ol>
+      <li>Do not disturb students who are still testing.</li>
+      <li>Do not exit the app or close your laptop.</li>
+      <li>Do not access phones, smartwatches, textbooks, notes, or the internet.</li>
+      <li>Do not eat or drink near any testing device.</li>
+      <li>Do not speak in the testing room; outside the room, do not discuss the exam with anyone.</li>
+    </ol>
+  </div>
+  <div class="dark__name" data-name></div>
+  <div class="battery battery--dark" data-battery hidden><span data-battery-pct></span><span class="ico" data-icon="battery"></span></div>
+</section>
+
+<!-- ============================= RESUME ============================== -->
+<section id="screen-resume" class="screen dark resume" hidden>
+  <button class="btn-yellow btn-yellow--lg" id="resume-btn" type="button">Resume Testing</button>
+  <div class="dark__name" data-name></div>
+  <div class="battery battery--dark" data-battery hidden><span data-battery-pct></span><span class="ico" data-icon="battery"></span></div>
+</section>
+
+<!-- ============================== DONE =============================== -->
+<section id="screen-done" class="screen done" hidden>
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+  <main class="done__main">
+    <h1 class="done__title">Congratulations!</h1>
+    <p class="done__sub">The test is complete, and your answers have been submitted.</p>
+    <div class="done__card">
+      <div class="done__art">
+        <svg viewBox="0 0 240 220" role="img" aria-label="Smiling laptop">
+          <circle cx="120" cy="108" r="106" fill="#f3f5fa" stroke="#e3e8f1" stroke-width="2"/>
+          <path d="M44 192h160c-4 6-148 6-160 0z" fill="#d9d9d9"/>
+          <rect x="28" y="40" width="192" height="122" rx="7" fill="#dfe3ea" stroke="#3d3d3d" stroke-width="2.6"/>
+          <rect x="47" y="54" width="154" height="98" rx="1" fill="#fafafa" stroke="#3d3d3d" stroke-width="2.6"/>
+          <path d="M128 56h72v95h-42z" fill="#eef1f5"/>
+          <circle cx="124" cy="102" r="35" fill="#cdf1ff" stroke="#3d3d3d" stroke-width="2.8"/>
+          <path d="M104 94q5-6 10 0M134 94q5-6 10 0" fill="none" stroke="#3d3d3d" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M103 107h42c0 14-9 22-21 22s-21-8-21-22z" fill="#fff" stroke="#3d3d3d" stroke-width="2.8" stroke-linejoin="round"/>
+          <rect x="10" y="162" width="228" height="20" rx="5" fill="#c9d2e1" stroke="#3d3d3d" stroke-width="2.6"/>
+          <path d="M11 170h226" stroke="#3d3d3d" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="done__sep" aria-hidden="true"></div>
+      <div class="done__msg">
+        <p><b>Your proctor will dismiss you</b> when it’s time to go.</p>
+        <p><b>Please be quiet</b>; other students may still be testing.</p>
+      </div>
+    </div>
+    <button class="btn-yellow done__home" id="done-home" type="button">Return to Homepage</button>
+    <p class="done__status" id="done-status" role="status"></p>
+  </main>
+</section>
+
+<!-- ============================== MODALS ============================= -->
+<div class="modal" id="help-modal" hidden role="dialog" aria-modal="true">
+  <div class="modal__box">
+    <h2>Help</h2>
+    <p>Enter the 6-digit start code your proctor gives you, then select <b>Start Test</b>.</p>
+    <p>If you have trouble, raise your hand and wait for the proctor.</p>
+    <div class="modal__foot"><button class="btn-yellow" data-close-modal type="button">Close</button></div>
+  </div>
+</div>
+<div class="modal" id="home-modal" hidden role="dialog" aria-modal="true">
+  <div class="modal__box">
+    <h2>Return to Home</h2>
+    <p>Your proctor will tell you when to enter your start code. Stay on this screen until then.</p>
+    <div class="modal__foot"><button class="btn-yellow" data-close-modal type="button">Close</button></div>
+  </div>
+</div>
+<div class="modal" id="instructions-modal" hidden role="dialog" aria-modal="true">
+  <div class="modal__box modal__box--wide">
+    <h2>Proctor Instructions</h2>
+    <p>Today you’re taking the SAT. The test has two sections: <b>Reading and Writing</b> and <b>Math</b>. Each section is divided into two modules.</p>
+    <ul>
+      <li>Reading and Writing: 2 modules, 27 questions each, 32 minutes each.</li>
+      <li>After Reading and Writing you’ll have a 10-minute break.</li>
+      <li>Math: 2 modules, 22 questions each, 35 minutes each. A graphing calculator and a reference sheet are built into the app.</li>
+    </ul>
+    <p>The clock at the top of the screen shows the time remaining in each module. When time runs out, you’ll move on automatically. Do not refresh the page or close the app during the test.</p>
+    <div class="modal__foot"><button class="btn-yellow" data-close-modal type="button">Close</button></div>
+  </div>
+</div>
+<div class="modal" id="shortcuts-modal" hidden role="dialog" aria-modal="true">
+  <div class="modal__box">
+    <h2>Keyboard Shortcuts</h2>
+    <table class="kbd-table">
+      <tr><td><kbd>Alt</kbd> + <kbd>→</kbd></td><td>Next question</td></tr>
+      <tr><td><kbd>Alt</kbd> + <kbd>←</kbd></td><td>Previous question</td></tr>
+      <tr><td><kbd>Alt</kbd> + <kbd>A</kbd> … <kbd>D</kbd></td><td>Select answer choice</td></tr>
+      <tr><td><kbd>Alt</kbd> + <kbd>R</kbd></td><td>Mark for review</td></tr>
+    </table>
+    <div class="modal__foot"><button class="btn-yellow" data-close-modal type="button">Close</button></div>
+  </div>
+</div>
+
+</body>
+</html>

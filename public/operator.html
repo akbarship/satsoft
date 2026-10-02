@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Bluebook Operator</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="/css/operator.css">
+  <script defer src="/js/icons.js"></script>
+  <script defer src="/js/operator.js"></script>
+</head>
+<body>
+
+<!-- ============================== LOGIN ============================== -->
+<section id="view-login" class="login" hidden>
+  <header class="login__top">
+    <span class="brand"><span class="brand__logo" aria-hidden="true"></span>Bluebook</span>
+  </header>
+  <main class="login__main">
+    <form class="login__card" id="login-form" autocomplete="on" novalidate>
+      <h1>Operator Sign In</h1>
+      <p class="login__sub">Sign in to create and manage student test pages.</p>
+      <label class="field">
+        <span>Login</span>
+        <input id="login-name" name="username" autocomplete="username" required autofocus>
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <input id="login-pass" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <p class="form-error" id="login-error" role="alert"></p>
+      <button class="btn btn--blue btn--wide" id="login-btn" type="submit">Sign In</button>
+    </form>
+  </main>
+</section>
+
+<!-- ============================ DASHBOARD ============================ -->
+<section id="view-app" class="app" hidden>
+  <header class="top dashed-bottom">
+    <div class="top__left">
+      <span class="brand"><span class="brand__logo" aria-hidden="true"></span>Bluebook</span>
+      <span class="top__title">Operator</span>
+    </div>
+    <div class="top__right">
+      <span class="top__user">Signed in as <b id="me"></b></span>
+      <button class="btn btn--outline btn--sm" id="logout" type="button">Sign Out</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>Create a Student Page</h2>
+      <p class="muted">Each student gets a personal link like <code id="example-link"></code>. Their name appears on the test, and their start code and name are sent to Telegram.</p>
+      <form class="add" id="add-form" novalidate>
+        <label class="field field--grow">
+          <span>Student full name</span>
+          <input id="add-name" placeholder="e.g. Olimjonov Akbar" maxlength="80" required>
+        </label>
+        <label class="field field--id">
+          <span>Page number <em>(optional)</em></span>
+          <input id="add-id" inputmode="numeric" placeholder="Auto" maxlength="8">
+        </label>
+        <button class="btn btn--blue" id="add-btn" type="submit">Create Page</button>
+      </form>
+      <p class="form-error" id="add-error" role="alert"></p>
+    </section>
+
+    <section class="card">
+      <div class="list-head">
+        <h2>Students <span class="count" id="count"></span></h2>
+        <input class="search" id="search" type="search" placeholder="Search by name or page number" aria-label="Search students">
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>Page</th><th>Student</th><th>Test link</th><th>Status</th><th>Last result</th><th class="t-right">Actions</th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <p class="empty" id="empty" hidden>No students yet. Create the first page above.</p>
+      </div>
+    </section>
+  </main>
+</section>
+
+<!-- ============================== MODALS ============================= -->
+<div class="modal" id="edit-modal" hidden role="dialog" aria-modal="true" aria-labelledby="edit-title">
+  <form class="modal__box" id="edit-form" novalidate>
+    <h2 id="edit-title">Rename Student</h2>
+    <p class="muted">Page <b id="edit-id"></b></p>
+    <label class="field">
+      <span>Student full name</span>
+      <input id="edit-name" maxlength="80" required>
+    </label>
+    <p class="form-error" id="edit-error" role="alert"></p>
+    <div class="modal__foot">
+      <button class="btn btn--outline" type="button" data-close>Cancel</button>
+      <button class="btn btn--blue" type="submit">Save</button>
+    </div>
+  </form>
+</div>
+
+<div class="modal" id="delete-modal" hidden role="dialog" aria-modal="true" aria-labelledby="delete-title">
+  <div class="modal__box">
+    <h2 id="delete-title">Delete Student Page?</h2>
+    <p>The page <b id="delete-link"></b> for <b id="delete-name"></b> will stop working, and its saved results will be removed.</p>
+    <div class="modal__foot">
+      <button class="btn btn--outline" type="button" data-close>Cancel</button>
+      <button class="btn btn--danger" id="delete-confirm" type="button">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sat-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server.js"],
+      "env": { "SKIP_TELEGRAM": "1", "PORT": "3107" },
+      "port": 3107
+    }
+  ]
+}
