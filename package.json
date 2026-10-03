@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "SKIP_TELEGRAM=1 node server.js",
+    "dev": "SKIP_TELEGRAM=0 node server.js",
     "operator": "node server.js set-operator"
   },
   "engines": {

@@ -56,7 +56,7 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 /** Teachers' Telegram user ids (comma-separated). Each one must have pressed Start in the bot once. */
 const CHAT_IDS = String(process.env.TELEGRAM_CHAT_IDS || process.env.TELEGRAM_CHAT_ID || '')
   .split(',').map((s) => s.trim()).filter(Boolean);
-const SKIP_TELEGRAM = process.env.SKIP_TELEGRAM === '0';
+const SKIP_TELEGRAM = false;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const QUESTIONS_FILE = path.join(__dirname, 'data', 'questions.js');
 
